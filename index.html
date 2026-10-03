@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#eceeeb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1116" media="(prefers-color-scheme: dark)">
+<meta name="description" content="A fast, private mind map editor. Everything stays in your browser; export to JSON to save.">
+<title>Mind Map</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234357d9'/%3E%3Cpath d='M16 16 9 10M16 16l7-6M16 16v8' stroke='%23fff' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23fff'/%3E%3Ccircle cx='9' cy='10' r='2.6' fill='%23fff'/%3E%3Ccircle cx='23' cy='10' r='2.6' fill='%23fff'/%3E%3Ccircle cx='16' cy='24' r='2.6' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="canvas.css">
+<link rel="stylesheet" href="chrome.css">
+<link rel="stylesheet" href="overlays.css">
+</head>
+<body>
+
+<!-- ===== Icon sprite (stroke icons, 24×24 grid) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/><circle cx="5" cy="6" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="6" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.7" fill="currentColor" stroke="none"/><path d="M10.2 10.4 6.2 7M13.8 10.4 17.8 7M12 14.6V18.3"/></symbol>
+    <symbol id="i-child" viewBox="0 0 24 24"><path d="M5 4v8a4 4 0 0 0 4 4h9M14 12l4 4-4 4"/></symbol>
+    <symbol id="i-sibling" viewBox="0 0 24 24"><path d="M4 6h11M4 12h11M4 18h6M18 14v6M15 17h6"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/></symbol>
+    <symbol id="i-fold" viewBox="0 0 24 24"><path d="M7 20l5-5 5 5M7 4l5 5 5-5"/></symbol>
+    <symbol id="i-unfold" viewBox="0 0 24 24"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1.1.9-1.1 1.7M12 17h.01"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+    <symbol id="i-ul" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+    <symbol id="i-ol" viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M4 4.6l1.2-.8V8M3.6 13.4a1.4 1.4 0 0 1 2.6.6c0 .9-2.6 1.6-2.6 2.8h2.8"/></symbol>
+    <symbol id="i-indent" viewBox="0 0 24 24"><path d="M4 5h16M11 10h9M11 14h9M4 19h16M4 9.5l3.5 2.5L4 14.5z"/></symbol>
+    <symbol id="i-outdent" viewBox="0 0 24 24"><path d="M4 5h16M11 10h9M11 14h9M4 19h16M7.5 9.5 4 12l3.5 2.5z"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 16l4.5-4.5 4 4 3-3L20 16M9 9.5h.01"/></symbol>
+    <symbol id="i-table" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 10h16M10 5v14"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M7 20h12M5.5 13.5 14 5l5 5-8 8H8l-2.5-2.5a1.4 1.4 0 0 1 0-2z"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 1.5-2-.6-1.2.2-2.5 1.6-2.5H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3zM7.5 11h.01M10 7.5h.01M14 7.5h.01"/></symbol>
+  </defs>
+</svg>
+
+<!-- ===== Canvas ===== -->
+<main id="viewport" aria-label="Mind map canvas">
+  <div id="world">
+    <svg id="edges" aria-hidden="true"></svg>
+    <div id="nodes-layer"></div>
+  </div>
+</main>
+
+<!-- ===== App bar ===== -->
+<header id="appbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"><svg class="i"><use href="#i-logo"/></svg></span>
+    <div class="brand-text">
+      <h1 id="doc-title" class="doc-title">My Mind Map</h1>
+      <span id="save-state" class="save-state" data-dirty="false" role="status"><span id="save-label">Saved</span></span>
+    </div>
+    <button id="btn-bg" class="icon-btn" type="button" title="Canvas background" aria-label="Canvas background" aria-haspopup="true"><svg class="i" aria-hidden="true"><use href="#i-palette"/></svg></button>
+  </div>
+  <div class="appbar-actions">
+    <button id="btn-export" class="icon-btn" type="button" title="Export as JSON" aria-label="Export as JSON"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg></button>
+    <button id="btn-import" class="icon-btn" type="button" title="Import JSON" aria-label="Import JSON"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg></button>
+    <button id="btn-help" class="icon-btn" type="button" title="Shortcuts (?)" aria-label="Help and shortcuts"><svg class="i" aria-hidden="true"><use href="#i-help"/></svg></button>
+  </div>
+</header>
+
+<!-- ===== Canvas background popover ===== -->
+<div id="bg-panel" class="bg-panel" role="group" aria-label="Canvas background" hidden>
+  <div id="bg-swatches" class="sp-row"></div>
+  <label class="sp-row bg-custom">Custom <input id="bg-custom" type="color" value="#eceeeb" aria-label="Custom canvas color"></label>
+</div>
+
+<!-- ===== Zoom controls ===== -->
+<div id="zoom-controls" role="group" aria-label="Zoom">
+  <button id="btn-zoom-in" class="zbtn" type="button" title="Zoom in" aria-label="Zoom in"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+  <button id="btn-zoom-reset" class="zbtn zlabel" type="button" title="Reset zoom" aria-label="Reset zoom"><span id="zoom-label">100%</span></button>
+  <button id="btn-zoom-out" class="zbtn" type="button" title="Zoom out" aria-label="Zoom out"><svg class="i" aria-hidden="true"><use href="#i-minus"/></svg></button>
+  <button id="btn-fit" class="zbtn" type="button" title="Center on root" aria-label="Center on root"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg></button>
+</div>
+
+<!-- ===== Node action dock ===== -->
+<div id="dock-wrap">
+  <div id="color-picker" role="group" aria-label="Node style" hidden>
+      <div id="swatches" class="sp-row" aria-label="Color"></div>
+      <div class="sp-row sp-size">
+        <button class="sp-chip" data-fs="12" type="button" aria-pressed="false">S</button>
+        <button class="sp-chip" data-fs="15" type="button" aria-pressed="false">M</button>
+        <button class="sp-chip" data-fs="20" type="button" aria-pressed="false">L</button>
+        <button class="sp-chip" data-fs="28" type="button" aria-pressed="false">XL</button>
+        <output id="fs-val" class="sp-val">15px</output>
+        <input id="fs-range" type="range" min="10" max="56" step="1" aria-label="Font size">
+      </div>
+      <div class="sp-row sp-scale" role="group" aria-label="Node scale">
+        <span class="sp-label">Scale</span>
+        <button class="sp-chip" data-sc="-0.1" type="button" aria-label="Scale down">−</button>
+        <output id="sc-val" class="sp-val">100%</output>
+        <button class="sp-chip" data-sc="0.1" type="button" aria-label="Scale up">+</button>
+        <button class="sp-chip" data-sc="reset" type="button">100%</button>
+      </div>
+      <div id="ff-row" class="sp-row" aria-label="Font"></div>
+      <div class="sp-row">
+        <button class="sp-chip sp-tg" data-tg="b" type="button" aria-pressed="false" aria-label="Bold"><b>B</b></button>
+        <button class="sp-chip sp-tg" data-tg="i" type="button" aria-pressed="false" aria-label="Italic"><i>I</i></button>
+        <button class="sp-chip sp-tg" data-tg="u" type="button" aria-pressed="false" aria-label="Underline"><u>U</u></button>
+        <button id="sp-branch" class="sp-chip sp-wide" type="button">Apply to branch</button>
+        <button id="sp-reset" class="sp-chip sp-wide" type="button">Reset</button>
+      </div>
+    </div>
+  <nav id="dock" aria-label="Node actions">
+    <button id="btn-add-child" class="dock-btn" type="button" title="Add child (Tab)"><svg class="i" aria-hidden="true"><use href="#i-child"/></svg><span>Child</span></button>
+    <button id="btn-add-sibling" class="dock-btn" type="button" title="Add sibling (Enter)"><svg class="i" aria-hidden="true"><use href="#i-sibling"/></svg><span>Sibling</span></button>
+    <button id="btn-rename" class="dock-btn" type="button" title="Rename node (F2)"><svg class="i" aria-hidden="true"><use href="#i-pencil"/></svg><span>Rename</span></button>
+    <button id="btn-edit" class="dock-btn" type="button" title="Edit title and content (double-click)"><svg class="i" aria-hidden="true"><use href="#i-note"/></svg><span>Edit</span></button>
+    <button id="btn-collapse" class="dock-btn" type="button" title="Collapse / expand (C)"><svg class="i" aria-hidden="true"><use href="#i-fold"/></svg><span id="collapse-label">Collapse</span></button>
+    <button id="btn-color" class="dock-btn" type="button" title="Node style: color, size, font" aria-haspopup="true" aria-expanded="false"><i class="color-dot" aria-hidden="true"></i><span>Style</span></button>
+    <button id="btn-delete" class="dock-btn danger" type="button" title="Delete (Del)"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg><span>Delete</span></button>
+  </nav>
+</div>
+
+<!-- ===== Edit side widget ===== -->
+<aside id="side" aria-label="Edit node" hidden>
+  <div id="side-grip" class="side-grip" role="separator" aria-label="Resize editor panel" title="Drag to resize (double-click to reset)"></div>
+  <div class="side-head">
+    <h2>Edit node</h2>
+    <button id="fb-done" class="btn primary" type="button" title="Done (Esc)">Done</button>
+  </div>
+  <input id="side-title" type="text" maxlength="200" autocomplete="off" placeholder="Title" aria-label="Node title">
+  <div class="sp-row sp-scale side-scale" role="group" aria-label="Node scale">
+    <span class="sp-label">Scale</span>
+    <button class="sp-chip" data-sc="-0.1" type="button" aria-label="Scale down">−</button>
+    <output id="side-sc-val" class="sp-val">100%</output>
+    <button class="sp-chip" data-sc="0.1" type="button" aria-label="Scale up">+</button>
+    <button class="sp-chip" data-sc="reset" type="button">100%</button>
+  </div>
+  <div id="fmt-bar" role="toolbar" aria-label="Text formatting">
+  <div class="fb-scroll">
+    <button data-cmd="bold" class="fb-btn" type="button" title="Bold (Ctrl+B)" aria-label="Bold"><b>B</b></button>
+    <button data-cmd="italic" class="fb-btn" type="button" title="Italic (Ctrl+I)" aria-label="Italic"><i>I</i></button>
+    <button data-cmd="underline" class="fb-btn" type="button" title="Underline (Ctrl+U)" aria-label="Underline"><u>U</u></button>
+    <button data-cmd="strikeThrough" class="fb-btn" type="button" title="Strikethrough" aria-label="Strikethrough"><s>S</s></button>
+    <button id="fb-code" class="fb-btn" type="button" title="Inline code" aria-label="Inline code"><svg class="i" aria-hidden="true"><use href="#i-code"/></svg></button>
+    <span class="fb-sep" aria-hidden="true"></span>
+    <button data-cmd="formatBlock" data-val="h3" class="fb-btn" type="button" title="Heading" aria-label="Heading"><b>H</b></button>
+    <button data-cmd="insertUnorderedList" class="fb-btn" type="button" title="Bullet list" aria-label="Bullet list"><svg class="i" aria-hidden="true"><use href="#i-ul"/></svg></button>
+    <button data-cmd="insertOrderedList" class="fb-btn" type="button" title="Numbered list" aria-label="Numbered list"><svg class="i" aria-hidden="true"><use href="#i-ol"/></svg></button>
+    <button id="fb-outdent" class="fb-btn" type="button" title="Outdent (Shift+Tab)" aria-label="Outdent"><svg class="i" aria-hidden="true"><use href="#i-outdent"/></svg></button>
+    <button id="fb-indent" class="fb-btn" type="button" title="Indent / insert tab (Tab)" aria-label="Indent or insert tab"><svg class="i" aria-hidden="true"><use href="#i-indent"/></svg></button>
+    <span class="fb-sep" aria-hidden="true"></span>
+    <label class="fb-btn fb-color" id="fb-color-label" title="Text color"><span aria-hidden="true">A</span><input type="color" id="fb-text-color" value="#171a21" aria-label="Text color"></label>
+    <button id="fb-image" class="fb-btn" type="button" title="Insert image" aria-label="Insert image"><svg class="i" aria-hidden="true"><use href="#i-image"/></svg></button>
+    <button id="fb-table" class="fb-btn" type="button" title="Insert table" aria-label="Insert table"><svg class="i" aria-hidden="true"><use href="#i-table"/></svg></button>
+    <span id="table-ops" hidden>
+      <span class="fb-sep" aria-hidden="true"></span>
+      <button data-top="addRow" class="fb-btn fb-text" type="button" title="Add row below">+Row</button>
+      <button data-top="addCol" class="fb-btn fb-text" type="button" title="Add column right">+Col</button>
+      <button data-top="delRow" class="fb-btn fb-text danger" type="button" title="Delete row">−Row</button>
+      <button data-top="delCol" class="fb-btn fb-text danger" type="button" title="Delete column">−Col</button>
+      <span class="fb-sep" aria-hidden="true"></span>
+      <button data-top="merge" class="fb-btn fb-text" type="button" title="Merge selected cells (drag across cells or Shift+click)" disabled>Merge</button>
+      <button data-top="unmerge" class="fb-btn fb-text" type="button" title="Split merged cell back into cells" disabled>Unmerge</button>
+      <button data-top="header" class="fb-btn fb-text" type="button" title="Toggle header row">Header</button>
+      <button data-top="select" class="fb-btn fb-text" type="button" title="Tap, then tap another cell to select a range" aria-pressed="false">Select</button>
+      <span class="fb-sep" aria-hidden="true"></span>
+      <button data-top="delTable" class="fb-btn fb-text danger" type="button" title="Delete the whole table">Del table</button>
+    </span>
+    <span class="fb-sep" aria-hidden="true"></span>
+    <button id="fb-clear" class="fb-btn" type="button" title="Clear formatting" aria-label="Clear formatting"><svg class="i" aria-hidden="true"><use href="#i-eraser"/></svg></button>
+  </div>
+  <div id="table-grid" class="table-grid" role="group" aria-label="Choose table size" hidden></div>
+</div>
+  <div id="side-body" class="node-body" contenteditable="false" role="textbox" aria-multiline="true" aria-label="Node content" data-placeholder="Write notes, paste images or tables…"></div>
+</aside>
+
+<!-- ===== Context menu ===== -->
+<div id="ctx-menu" class="ctx-menu" role="menu" hidden></div>
+
+<!-- ===== Modal ===== -->
+<dialog id="modal" aria-labelledby="modal-title">
+  <h2 id="modal-title"></h2>
+  <p id="modal-text"></p>
+  <input id="modal-input" type="text" autocomplete="off" spellcheck="false" aria-label="Name" hidden>
+  <div class="modal-actions">
+    <button id="modal-cancel" class="btn" type="button">Cancel</button>
+    <button id="modal-ok" class="btn primary" type="button">OK</button>
+  </div>
+</dialog>
+
+<!-- ===== Help sheet ===== -->
+<dialog id="help" aria-labelledby="help-title">
+  <h2 id="help-title">Shortcuts and gestures</h2>
+  <table class="help-table">
+    <tbody>
+      <tr><th scope="row">Tab</th><td>Add child node</td></tr>
+      <tr><th scope="row">Enter</th><td>Add sibling node</td></tr>
+      <tr><th scope="row">Del / Backspace</th><td>Delete node</td></tr>
+      <tr><th scope="row">C</th><td>Collapse / expand branch</td></tr>
+      <tr><th scope="row">F2</th><td>Rename node</td></tr>
+      <tr><th scope="row">Double-click / double-tap</th><td>Edit rich text body</td></tr>
+      <tr><th scope="row">Right-click / long-press</th><td>Node menu</td></tr>
+      <tr><th scope="row">Drag canvas</th><td>Pan</td></tr>
+      <tr><th scope="row">[ / ]</th><td>Shrink / enlarge selected node</td></tr>
+      <tr><th scope="row">Wheel / pinch</th><td>Zoom</td></tr>
+      <tr><th scope="row">Drag node onto another</th><td>Re-parent branch</td></tr>
+      <tr><th scope="row">Tab / Shift+Tab (editing)</th><td>Insert tab, indent list, or move between table cells</td></tr>
+      <tr><th scope="row">Shift+Enter (editing)</th><td>Line break inside a paragraph</td></tr>
+      <tr><th scope="row">Drag across cells / Shift+click</th><td>Select table cells to merge or format</td></tr>
+      <tr><th scope="row">Paste (editing)</th><td>Images, tables and formatted text</td></tr>
+      <tr><th scope="row">Esc</th><td>Finish editing</td></tr>
+      <tr><th scope="row">?</th><td>This help</td></tr>
+    </tbody>
+  </table>
+  <div class="modal-actions"><button class="btn primary" id="help-close" type="button">Close</button></div>
+</dialog>
+
+<input type="file" id="file-input" accept=".json,application/json" hidden>
+
+<script src="state.js"></script>
+<script src="nodes.js"></script>
+<script src="editor.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

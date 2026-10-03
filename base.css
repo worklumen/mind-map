@@ -1,0 +1,128 @@
+/* ==========================================================================
+ *  Mind Map — base: design tokens and element defaults
+ *  Mobile-first. Light and dark themes follow the operating system.
+ *  Layout is identical at every size: app bar (top), canvas, zoom stack
+ *  (right), node dock (bottom). Larger screens only gain room and precision.
+ *  ========================================================================== */
+
+/* ---------- 1. Tokens ---------- */
+:root {
+  color-scheme: light dark;
+
+  /* Type */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  /* Surfaces — light */
+  --canvas: #eceeeb;
+  --dot: rgba(23, 26, 33, 0.13);
+  --surface: #ffffff;
+  --surface-2: #f4f5f3;
+  --surface-3: #e9ebe7;
+  --glass: color-mix(in srgb, var(--surface) 84%, transparent);
+
+  /* Ink */
+  --ink: #171a21;
+  --ink-2: #4a5160;
+  --ink-3: #727a89;
+  --on-accent: #ffffff;
+
+  /* Lines */
+  --line: rgba(23, 26, 33, 0.10);
+  --line-strong: rgba(23, 26, 33, 0.18);
+
+  /* Brand + status */
+  --accent: #4357d9;
+  --accent-hover: #3446c0;
+  --danger: #cf3347;
+  --warn: #c98a0a;
+  --ok: #2f9e6e;
+
+  /* Elevation */
+  --shadow-node: 0 1px 2px rgba(23, 26, 33, 0.06), 0 4px 14px rgba(23, 26, 33, 0.07);
+  --shadow-lift: 0 2px 4px rgba(23, 26, 33, 0.08), 0 14px 32px rgba(23, 26, 33, 0.16);
+  --shadow-pop: 0 2px 6px rgba(23, 26, 33, 0.08), 0 18px 48px rgba(23, 26, 33, 0.18);
+
+  /* Shape */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 20px;
+
+  /* Layout */
+  --gutter: 12px;
+  --appbar-h: 56px;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --dock-h: 62px;
+  --ctl: 40px;               /* minimum comfortable control size */
+  --node-max: min(280px, 72vw);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #0e1116;
+    --dot: rgba(255, 255, 255, 0.075);
+    --surface: #171b23;
+    --surface-2: #1d222c;
+    --surface-3: #262c38;
+
+    --ink: #e9ecf2;
+    --ink-2: #aab1c0;
+    --ink-3: #7c8496;
+    --on-accent: #0e1116;
+
+    --line: rgba(255, 255, 255, 0.09);
+    --line-strong: rgba(255, 255, 255, 0.17);
+
+    --accent: #8d9cff;
+    --accent-hover: #a6b2ff;
+    --danger: #ff7384;
+    --warn: #f0b13a;
+    --ok: #52c795;
+
+    --shadow-node: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.32);
+    --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 36px rgba(0, 0, 0, 0.55);
+    --shadow-pop: 0 2px 6px rgba(0, 0, 0, 0.4), 0 22px 56px rgba(0, 0, 0, 0.6);
+  }
+}
+
+@media (pointer: coarse) {
+  :root { --ctl: 44px; }
+}
+
+/* ---------- 2. Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+button:disabled { cursor: default; }
+
+.i {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

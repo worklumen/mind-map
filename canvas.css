@@ -1,0 +1,221 @@
+/* ==========================================================================
+ *  Mind Map — canvas: infinite viewport, edges, node cards and their content
+ *  ========================================================================== */
+
+/* ---------- 3. Canvas ---------- */
+#viewport {
+position: fixed;
+inset: 0;
+cursor: grab;
+touch-action: none;
+background-color: var(--canvas);
+background-image: radial-gradient(circle, var(--dot) 1.3px, transparent 1.4px);
+background-size: 28px 28px;
+-webkit-user-select: none;
+user-select: none;
+}
+#viewport.panning { cursor: grabbing; }
+#world {
+position: absolute;
+top: 0;
+left: 0;
+transform-origin: 0 0;
+will-change: transform;
+}
+#edges {
+position: absolute;
+top: 0;
+left: 0;
+width: 1px;
+height: 1px;
+overflow: visible;
+pointer-events: none;
+}
+#edges path {
+fill: none;
+stroke-width: 2.25;
+stroke-linecap: round;
+opacity: 0.8;
+}
+
+/* ---------- 4. Nodes ---------- */
+.node {
+  position: absolute;
+  min-width: 120px;
+  max-width: var(--node-max);
+  padding: 10px 14px 10px 19px;
+  background: color-mix(in srgb, var(--nc, var(--accent)) 7%, var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-node);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.node::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 7px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--nc, var(--accent));
+}
+.node:hover { border-color: var(--line-strong); }
+.node.selected {
+  border-color: var(--nc, var(--accent));
+  box-shadow:
+  0 0 0 3px color-mix(in srgb, var(--nc, var(--accent)) 26%, transparent),
+  var(--shadow-lift);
+}
+.node.drop-target {
+  outline: 2px dashed var(--ink);
+  outline-offset: 4px;
+}
+.node.dragging {
+  z-index: 10;
+  opacity: 0.92;
+  cursor: grabbing;
+  pointer-events: none;
+  box-shadow: var(--shadow-lift);
+  transition: none;
+}
+.node.editing { touch-action: auto; cursor: default; z-index: 5; }
+
+.node-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.node-body {
+  margin-top: 3px;
+  max-height: 360px;
+  overflow: hidden;
+  white-space: pre-wrap;   /* multi-line text and literal tabs */
+  tab-size: 4;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  word-break: break-word;
+}
+.node-body:empty { display: none; }
+.node-body.is-clipped {
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(#000 calc(100% - 28px), transparent);
+}
+.node-body blockquote { margin: 2px 0; padding-left: 10px; border-left: 3px solid var(--line-strong); }
+.node-body pre { font-family: var(--font-mono); font-size: 12px; }
+.node-body h3 { font-size: 14px; font-weight: 600; color: var(--ink); margin: 2px 0; }
+.node-body img { display: block; max-width: 100%; margin: 4px 0; border-radius: var(--r-sm); }
+.node-body ul, .node-body ol { padding-left: 18px; }
+.node-body a { color: var(--accent); }
+.node-body code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--surface-3);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.node-body table {
+  max-width: 100%;
+  margin: 4px 0;
+  border-collapse: collapse;
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+.node-body td, .node-body th {
+  min-width: 40px;
+  padding: 3px 8px;
+  border: 1px solid var(--line-strong);
+  font-size: 12px;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.node-body th { font-weight: 600; background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.node.wide { max-width: min(540px, 88vw); }
+
+/* Table cell selection while editing */
+.node-body td.cell-selected, .node-body th.cell-selected {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.node-body.cell-selecting, .node-body.cell-selecting * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+.node-title[contenteditable="true"],
+.node-body[contenteditable="true"] {
+  outline: none;
+  cursor: text;
+  -webkit-user-select: text;
+  user-select: text;
+  touch-action: auto;
+}
+.node-body[contenteditable="true"] {
+  max-height: none;
+  overflow: visible;
+  -webkit-mask-image: none;
+  mask-image: none;
+  color: var(--ink);
+  min-height: 1.5em;
+}
+.node-title[contenteditable="true"] {
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--nc, var(--accent)) 40%, transparent);
+}
+
+/* Collapse toggle */
+.node-toggle {
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  transform: translateY(-50%);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: var(--shadow-node);
+}
+.node-toggle:hover { color: var(--ink); }
+.node-toggle.has-hidden {
+  border-color: transparent;
+  background: var(--nc, var(--accent));
+  color: #fff;
+}
+/* Expand the hit area without changing the visual size */
+.node-toggle::after { content: ""; position: absolute; inset: -8px; }
+
+/* ---------- Per-node typography ---------- */
+.node-title { font-size: var(--fs, 15px); }
+.node-body { font-size: calc(var(--fs, 15px) * 0.87); }
+.node-body pre, .node-body code, .node-body td, .node-body th { font-size: max(11px, calc(var(--fs, 15px) * 0.8)); }
+.node.st-b .node-title { font-weight: 800; }
+.node.st-i .node-title { font-style: italic; }
+.node.st-u .node-title { text-decoration: underline; text-underline-offset: 3px; }
+.node.editing .node-body[contenteditable="true"] { font-size: max(16px, calc(var(--fs, 15px) * 0.87)); }
+
+/* ---------- Resizable nodes ---------- */
+.node-resize { position: absolute; right: 2px; bottom: 2px; z-index: 2; display: none; width: 24px; height: 24px; cursor: nwse-resize; touch-action: none; }
+.node-resize::before { content: ""; position: absolute; right: 5px; bottom: 5px; width: 9px; height: 9px; border-right: 2.5px solid var(--nc, var(--accent)); border-bottom: 2.5px solid var(--nc, var(--accent)); border-radius: 0 0 3px 0; }
+.node.selected .node-resize { display: block; }
+.node.dragging .node-resize { display: none; }
+@media (pointer: coarse) { .node-resize { width: 36px; height: 36px; } .node-resize::before { right: 8px; bottom: 8px; } }
+.node.sized { display: flex; flex-direction: column; min-width: 0; max-width: none; }
+.node.sized .node-body { flex: 1 1 auto; min-height: 0; max-height: none; overflow: auto; -webkit-mask-image: none; mask-image: none; }
